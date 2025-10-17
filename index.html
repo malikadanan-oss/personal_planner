@@ -61,8 +61,8 @@
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label for="tarikh" class="block text-sm font-medium text-gray-700">Tarikh & Masa</label>
-                  <input type="datetime-local" id="tarikh" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm" required/>
+                  <label for="tarikh" class="block text-sm font-medium text-gray-700">Tarikh</label>
+                  <input type="date" id="tarikh" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm" required/>
                 </div>
                 <div>
                   <label for="masa" class="block text-sm font-medium text-gray-700">Tempoh Masa</label>
@@ -73,6 +73,16 @@
               <div>
                 <label for="tempat" class="block text-sm font-medium text-gray-700">Tempat</label>
                 <input type="text" id="tempat" placeholder="Contoh: Makmal Komputer sekolah" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+              </div>
+
+              <div>
+                <label for="nama_guru" class="block text-sm font-medium text-gray-700">Nama Guru Dibimbing</label>
+                <input type="text" id="nama_guru" placeholder="Contoh: Cikgu Ali bin Abu" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+              </div>
+
+              <div>
+                <label for="impak_catatan" class="block text-sm font-medium text-gray-700">Impak / Catatan</label>
+                <textarea id="impak_catatan" rows="3" placeholder="Ringkasan impak atau catatan bimbingan" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"></textarea>
               </div>
 
               <div class="text-right">
@@ -126,8 +136,8 @@
               <input type="text" id="edit-tajuk" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm" required/>
             </div>
             <div>
-              <label for="edit-tarikh" class="block text-sm font-medium text-gray-700">Tarikh & Masa</label>
-              <input type="datetime-local" id="edit-tarikh" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm" required/>
+              <label for="edit-tarikh" class="block text-sm font-medium text-gray-700">Tarikh</label>
+              <input type="date" id="edit-tarikh" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm" required/>
             </div>
             <div>
               <label for="edit-masa" class="block text-sm font-medium text-gray-700">Tempoh Masa</label>
@@ -136,6 +146,14 @@
             <div>
               <label for="edit-tempat" class="block text-sm font-medium text-gray-700">Tempat</label>
               <input type="text" id="edit-tempat" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+            </div>
+            <div>
+              <label for="edit-nama_guru" class="block text-sm font-medium text-gray-700">Nama Guru Dibimbing</label>
+              <input type="text" id="edit-nama_guru" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"/>
+            </div>
+            <div>
+              <label for="edit-impak_catatan" class="block text-sm font-medium text-gray-700">Impak / Catatan</label>
+              <textarea id="edit-impak_catatan" rows="3" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"></textarea>
             </div>
           </form>
         </div>
@@ -164,10 +182,7 @@
 
     // Util
     const msMY = new Intl.DateTimeFormat('ms-MY', { year:'numeric', month:'long' });
-    const fullDate = (d)=> new Date(d).toLocaleString('ms-MY', {
-      weekday:'long', day:'numeric', month:'long', year:'numeric',
-      hour:'numeric', minute:'2-digit', hour12:true
-    });
+    const fullDate = (d)=> new Date(d).toLocaleDateString('ms-MY', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 
     const monthKey = (d)=> {
       const dt = new Date(d);
@@ -267,6 +282,8 @@
                 <p class="text-sm text-gray-600">${fullDate(activity.tarikh)}</p>
                 <p class="text-sm text-gray-500">${activity.masa || 'Tempoh masa tidak dinyatakan'}</p>
                 <p class="mt-2 text-gray-700">${activity.tempat || 'Tempat tidak dinyatakan'}</p>
+                <p class="text-sm text-gray-700"><span class="font-medium">Nama Guru:</span> ${activity.nama_guru || '-'}</p>
+                <p class="text-sm text-gray-700"><span class="font-medium">Impak/Catatan:</span> ${activity.impak_catatan || '-'}</p>
               </div>
               <div class="flex items-center space-x-2">
                 <button onclick='openEditModal(${JSON.stringify(activity)})' class="text-blue-500 hover:text-blue-700 p-1" title="Edit" aria-label="Edit">
@@ -343,7 +360,9 @@
         tajuk:           document.getElementById('tajuk').value,
         tarikh:          document.getElementById('tarikh').value,
         masa:            document.getElementById('masa').value,
-        tempat:          document.getElementById('tempat').value
+        tempat:          document.getElementById('tempat').value,
+        nama_guru:       document.getElementById('nama_guru').value,
+        impak_catatan:   document.getElementById('impak_catatan').value
       };
       const { error } = await supa.from('aktiviti').insert([ payload ]);
       if(error){ Swal.fire('Gagal', error.message || 'Sila pastikan semua medan diisi dengan betul.', 'error'); }
@@ -361,9 +380,11 @@
       document.getElementById('edit-activity-id').value = activity.id;
       document.getElementById('edit-medium_aktiviti').value = activity.medium_aktiviti || '';
       document.getElementById('edit-tajuk').value = activity.tajuk || '';
-      document.getElementById('edit-tarikh').value = activity.tarikh ? String(activity.tarikh).slice(0,16) : '';
+      document.getElementById('edit-tarikh').value = activity.tarikh ? String(activity.tarikh).slice(0,10) : '';
       document.getElementById('edit-masa').value = activity.masa || '';
       document.getElementById('edit-tempat').value = activity.tempat || '';
+      document.getElementById('edit-nama_guru').value = activity.nama_guru || '';
+      document.getElementById('edit-impak_catatan').value = activity.impak_catatan || '';
       editModal.classList.remove('hidden');
     }
     function closeModal(){ editModal.classList.add('hidden'); }
@@ -375,7 +396,9 @@
         tajuk:           document.getElementById('edit-tajuk').value,
         tarikh:          document.getElementById('edit-tarikh').value,
         masa:            document.getElementById('edit-masa').value,
-        tempat:          document.getElementById('edit-tempat').value
+        tempat:          document.getElementById('edit-tempat').value,
+        nama_guru:       document.getElementById('edit-nama_guru').value,
+        impak_catatan:   document.getElementById('edit-impak_catatan').value
       };
       const { error } = await supa.from('aktiviti').update(updated).eq('id', id);
       if(error){ Swal.fire('Gagal', error.message || 'Aktiviti gagal dikemas kini.', 'error'); }
