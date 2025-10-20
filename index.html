@@ -171,7 +171,7 @@
   <!-- MODAL EDIT -->
   <div id="edit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
     <div class="relative top-20 mx-auto w-full max-w-lg">
-      <div class="bg-white rounded-md shadow-lg border max-h-[80vh] flex flex-col">
+      <div class="bg-white rounded-md shadow-lg border max-h/[80vh] max-h-[80vh] flex flex-col">
         <h3 class="text-lg font-medium text-gray-900 text-center py-3 border-b">Kemas Kini Aktiviti</h3>
 
         <!-- Isi borang boleh skrol -->
@@ -217,7 +217,7 @@
           </form>
         </div>
 
-        <!-- Kaki butang sentiasa kelihatan -->
+        <!-- Kaki butang -->
         <div class="px-4 py-3 border-t bg-gray-50 flex gap-2 sticky bottom-0">
           <button id="save-changes-btn" class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
             Simpan Perubahan
@@ -260,9 +260,7 @@
 
     // Cetak sentiasa tab Senarai
     document.getElementById('print-btn').addEventListener('click', ()=> window.print());
-    window.addEventListener('beforeprint', ()=>{
-      renderActivities(getSelectedMonth());
-    });
+    window.addEventListener('beforeprint', ()=>{ renderActivities(getSelectedMonth()); });
 
     // Indeks bulan (tahun semasa)
     function buildMonthIndex(rows){
@@ -484,6 +482,34 @@
       if(tabName==='list'){ loadActivities(); }
       if(tabName==='heatmap'){ renderHeatmapYear(); }
     }
+
+    // ===== DIPULIHKAN: Fungsi PADAM =====
+    async function deleteActivity(id){
+      if(!editEnabled){
+        Swal.fire('Terkunci','Buka mod edit dahulu.','info');
+        return;
+      }
+      const result = await Swal.fire({
+        title:'Anda Pasti?',
+        text:'Aktiviti yang dipadam tidak boleh dikembalikan.',
+        icon:'warning',
+        showCancelButton:true,
+        confirmButtonColor:'#3085d6',
+        cancelButtonColor:'#d33',
+        confirmButtonText:'Ya, padam!',
+        cancelButtonText:'Batal'
+      });
+      if(!result.isConfirmed) return;
+
+      const { error } = await supa.from('aktiviti').delete().match({ id });
+      if(error){
+        Swal.fire('Gagal', error.message || 'Aktiviti gagal dipadam.', 'error');
+      }else{
+        Swal.fire('Berjaya', 'Aktiviti telah dipadam.', 'success');
+        loadActivities(); // segar semula senarai tanpa ubah bulan dipilih
+      }
+    }
+    // ===== TAMAT: Fungsi PADAM =====
 
     // Modal edit
     const editModal = document.getElementById('edit-modal');

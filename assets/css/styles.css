@@ -41,7 +41,6 @@ body { font-family: 'Inter', sans-serif; }
   .no-print{ display:none !important; }
   .sticky-header{ position: static; box-shadow:none; border:none; }
 
-  /* Paksa hanya #tab-list dipaparkan ketika cetak */
   #tab-add, #tab-heatmap{ display:none !important; }
   #tab-list{ display:block !important; }
 }
