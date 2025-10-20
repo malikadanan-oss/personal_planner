@@ -13,13 +13,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .tab-button{ padding:0.75rem 1rem; cursor:pointer; border-bottom:3px solid transparent; color:#6b7280; }
-    .tab-button.active{ border-bottom-color:#3b82f6; color:#111827; font-weight:600; }
-    .tab-content{ display:none; }
-    .tab-content.active{ display:block; }
-  </style>
+  <!-- [TAMBAH] Alih CSS tersuai ke fail luar -->
+  <link rel="stylesheet" href="assets/css/styles.css"/>
 </head>
 <body class="bg-gray-50">
 
@@ -27,13 +22,26 @@
     <header class="mb-6">
       <h1 class="text-3xl font-bold text-gray-800">Perancang Aktiviti Peribadi</h1>
       <p class="text-gray-500">Urus dan jejak semua aktiviti anda di satu tempat.</p>
+
+      <!-- [TAMBAH] Panel Pemilik -->
+      <section class="mt-4 bg-white border border-gray-200 rounded-xl p-4 shadow-sm brand-owner">
+        <div class="flex items-start gap-3">
+          <div class="brand-avatar">MA</div>
+          <div>
+            <div class="text-sm text-gray-500">Pelaporan milik</div>
+            <div class="text-lg font-semibold text-gray-900">Malik Abdullah bin Adanan</div>
+            <div class="text-sm text-gray-700">Penolong PPD Unit Sumber Teknologi Pendidikan</div>
+            <div class="text-sm text-gray-700">Pejabat Pendidikan Daerah Alor Gajah</div>
+          </div>
+        </div>
+      </section>
+      <!-- [/TAMBAH] -->
     </header>
 
     <main>
       <!-- Tabs -->
       <div class="border-b border-gray-200 mb-6">
         <nav class="flex space-x-4" aria-label="Tabs">
-          <!-- Susunan baharu: Tambah dahulu, kemudian Senarai -->
           <button id="tab-add-btn"  class="tab-button active" onclick="switchTab('add')">Tambah Aktiviti</button>
           <button id="tab-list-btn" class="tab-button"        onclick="switchTab('list')">Senarai Aktiviti</button>
         </nav>
@@ -101,7 +109,6 @@
 
         <!-- Tab Senarai -->
         <div id="tab-list" class="tab-content">
-          <!-- Kawalan atas senarai -->
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div>
               <label for="month-jump" class="block text-sm font-medium text-gray-700">Lompat ke Bulan</label>
@@ -112,11 +119,8 @@
             <p id="list-meta" class="text-sm text-gray-500"></p>
           </div>
 
-          <!-- [TAMBAH] Ringkasan Bimbingan/Aktiviti -->
-          <div id="summary-boxes" class="grid grid-cols-2 gap-3 mb-4">
-            <!-- Diisi melalui JS -->
-          </div>
-          <!-- [TAMBAH] Tamat -->
+          <!-- Ringkasan -->
+          <div id="summary-boxes" class="grid grid-cols-2 gap-3 mb-4"></div>
 
           <div id="activity-list" class="space-y-6">
             <p class="text-gray-500">Memuatkan aktiviti...</p>
@@ -198,7 +202,6 @@
     // Util
     const msMY = new Intl.DateTimeFormat('ms-MY', { year:'numeric', month:'long' });
     const fullDate = (d)=> new Date(d).toLocaleDateString('ms-MY', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-
     const monthKey = (d)=> {
       const dt = new Date(d);
       const y = dt.getFullYear();
@@ -210,10 +213,10 @@
     const activityListEl = document.getElementById('activity-list');
     const monthJumpEl = document.getElementById('month-jump');
     const listMetaEl = document.getElementById('list-meta');
-    const summaryBoxesEl = document.getElementById('summary-boxes'); // [TAMBAH]
+    const summaryBoxesEl = document.getElementById('summary-boxes');
 
-    let cacheData = [];         // simpan data penuh
-    let monthIndex = [];        // [{key:'2025-10', label:'Oktober 2025', count: N}, ...]
+    let cacheData = [];
+    let monthIndex = [];
 
     function buildMonthIndex(rows){
       const map = new Map();
@@ -225,19 +228,16 @@
         cur.count += 1;
         map.set(key, cur);
       });
-      // Susun ikut terbaru ke lama
       return Array.from(map.values()).sort((a,b)=> a.key.localeCompare(b.key));
     }
 
     function renderMonthOptions(){
       monthJumpEl.innerHTML = `<option value="__ALL__">Semua Bulan</option>` +
         monthIndex.map(mi=>`<option value="${mi.key}">${mi.label} (${mi.count})</option>`).join('');
-      // Auto pilih bulan semasa jika wujud, jika tidak kekal "Semua Bulan"
       const nowKey = monthKey(new Date());
       if(monthIndex.some(mi=>mi.key===nowKey)) monthJumpEl.value = nowKey;
     }
 
-    // [TAMBAH] Ringkasan
     function renderSummary(totalBimbingan, totalAktiviti, filterKey){
       const scope = (filterKey==='__ALL__') ? 'Semua Bulan' : msMY.format(new Date(`${filterKey}-01T00:00:00`));
       summaryBoxesEl.innerHTML = `
@@ -251,20 +251,18 @@
         </div>
       `;
     }
-    // [TAMBAH] Tamat
 
     function renderActivities(filterKey='__ALL__'){
       activityListEl.innerHTML = '';
 
-      // [TAMBAH] Tentukan set data mengikut penapis
       const filtered = cacheData.filter(a => {
         const key = monthKey(a.tarikh);
         return filterKey==='__ALL__' ? true : key===filterKey;
       });
+
       const totalBimbingan = filtered.filter(x=>x.medium_aktiviti==='Bimbingan').length;
       const totalAktiviti  = filtered.filter(x=>x.medium_aktiviti==='Aktiviti').length;
       renderSummary(totalBimbingan, totalAktiviti, filterKey);
-      // [TAMBAH] Tamat
 
       if(filtered.length===0){
         activityListEl.innerHTML = `<p class="text-gray-500">Tiada aktiviti untuk bulan dipilih.</p>`;
@@ -272,7 +270,6 @@
         return;
       }
 
-      // Kelompok mengikut bulan
       const groups = new Map();
       filtered.forEach(a=>{
         const key = monthKey(a.tarikh);
@@ -281,7 +278,6 @@
         groups.set(key, arr);
       });
 
-      // Susun bulan menaik
       const orderedKeys = Array.from(groups.keys()).sort((a,b)=> a.localeCompare(b));
       let totalShown = 0;
 
@@ -289,7 +285,6 @@
         const items = groups.get(key).sort((a,b)=> new Date(a.tarikh) - new Date(b.tarikh));
         totalShown += items.length;
 
-        // Tajuk bulan
         const label = msMY.format(new Date(`${key}-01T00:00:00`));
         const section = document.createElement('section');
         section.id = `month-${key}`;
@@ -300,7 +295,6 @@
         h.textContent = label;
         section.appendChild(h);
 
-        // Kad aktiviti
         items.forEach(activity=>{
           const card = document.createElement('div');
           card.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200';
@@ -338,12 +332,10 @@
         activityListEl.appendChild(section);
       });
 
-      // Meta ringkas
       const scope = (filterKey==='__ALL__') ? 'semua bulan' : msMY.format(new Date(`${filterKey}-01T00:00:00`));
       listMetaEl.textContent = `Dipaparkan ${totalShown} aktiviti untuk ${scope}.`;
     }
 
-    // Muatkan data
     async function loadActivities(){
       const { data, error } = await supa.from('aktiviti').select('*').order('tarikh', { ascending:true });
       if(error){
@@ -357,12 +349,10 @@
       renderActivities(monthJumpEl.value);
     }
 
-    // Tapis/ lompat bulan
     monthJumpEl?.addEventListener('change', (e)=>{
       const val = e.target.value;
       renderActivities(val);
       if(val !== '__ALL__'){
-        // Skrol ke seksyen bulan yang dipilih
         const sec = document.getElementById(`month-${val}`);
         if(sec) sec.scrollIntoView({ behavior:'smooth', block:'start' });
       } else {
@@ -370,7 +360,6 @@
       }
     });
 
-    // CRUD asal
     async function deleteActivity(id){
       const result = await Swal.fire({
         title:'Anda Pasti?',
@@ -407,8 +396,6 @@
       else{
         Swal.fire('Berjaya', 'Aktiviti baharu telah ditambah.', 'success');
         addForm.reset();
-        // Kekal di tab Tambah agar cepat tambah banyak. Jika mahu terus lihat senarai, buka komen baris bawah.
-        // switchTab('list');
         loadActivities();
       }
     });
@@ -449,7 +436,6 @@
       }
     });
 
-    // Muat awal senarai (walau tab Tambah aktif)
     document.addEventListener('DOMContentLoaded', loadActivities);
   </script>
 </body>
