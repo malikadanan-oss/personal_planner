@@ -16,39 +16,41 @@
   <link rel="stylesheet" href="assets/css/styles.css"/>
 </head>
 <body class="bg-gray-50">
-
   <div class="max-w-4xl mx-auto p-4 md:p-6">
-    <header class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">Pelaporan Aktiviti Pegawai</h1>
-      <p class="text-gray-500">REKOD dan RUMUSAN aktiviti pegawai secara maya.</p>
 
-      <section class="mt-4 bg-white border border-gray-200 rounded-xl p-4 shadow-sm brand-owner">
-        <div class="flex items-start gap-3">
-          <img src="assets/img/malik.png?v=2" alt="Foto Malik Abdullah bin Adanan"
-               class="brand-photo" loading="lazy"
-               onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"/>
-          <div class="brand-avatar hidden">MA</div>
-          <div>
-            <div class="text-sm text-gray-500">Pelaporan milik</div>
-            <div class="text-lg font-semibold text-gray-900">Malik Abdullah bin Adanan</div>
-            <div class="text-sm text-gray-700">Penolong PPD Unit Sumber Teknologi Pendidikan</div>
-            <div class="text-sm text-gray-700">Pejabat Pendidikan Daerah Alor Gajah</div>
+    <!-- [STICKY] Header & panel pemilik -->
+    <div id="stickyHeader" class="sticky-header">
+      <header class="pb-4 bg-gray-50">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Pelaporan Aktiviti Pegawai</h1>
+        <p class="text-gray-500">REKOD dan RUMUSAN aktiviti pegawai secara maya.</p>
+
+        <section class="mt-4 bg-white border border-gray-200 rounded-xl p-4 shadow-sm brand-owner">
+          <div class="flex items-start gap-3">
+            <img src="assets/img/malik.png?v=2" alt="Foto Malik Abdullah bin Adanan"
+                 class="brand-photo" loading="lazy"
+                 onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"/>
+            <div class="brand-avatar hidden">MA</div>
+            <div>
+              <div class="text-sm text-gray-500">Pelaporan milik</div>
+              <div class="text-lg font-semibold text-gray-900">Malik Abdullah bin Adanan</div>
+              <div class="text-sm text-gray-700">Penolong PPD Unit Sumber Teknologi Pendidikan</div>
+              <div class="text-sm text-gray-700">Pejabat Pendidikan Daerah Alor Gajah</div>
+            </div>
           </div>
+        </section>
+
+        <div class="border-b border-gray-200 mt-5">
+          <nav class="flex space-x-4" aria-label="Tabs">
+            <button id="tab-add-btn"     class="tab-button active" onclick="switchTab('add')">Tambah Aktiviti</button>
+            <button id="tab-list-btn"    class="tab-button"        onclick="switchTab('list')">Senarai Aktiviti</button>
+            <button id="tab-heatmap-btn" class="tab-button"        onclick="switchTab('heatmap')">Peta Bulan</button>
+          </nav>
         </div>
-      </section>
-    </header>
+      </header>
+    </div>
+    <!-- [/STICKY] -->
 
-    <main>
-      <div class="border-b border-gray-200 mb-6">
-        <nav class="flex space-x-4" aria-label="Tabs">
-          <button id="tab-add-btn"  class="tab-button active" onclick="switchTab('add')">Tambah Aktiviti</button>
-          <button id="tab-list-btn" class="tab-button"        onclick="switchTab('list')">Senarai Aktiviti</button>
-          <!-- [TAMBAH] Tab Peta Bulan -->
-          <button id="tab-heatmap-btn" class="tab-button"     onclick="switchTab('heatmap')">Peta Bulan</button>
-          <!-- [/TAMBAH] -->
-        </nav>
-      </div>
-
+    <main class="pt-4">
       <div>
         <!-- Tab Tambah -->
         <div id="tab-add" class="tab-content active">
@@ -134,7 +136,7 @@
           </div>
         </div>
 
-        <!-- [TAMBAH] Tab Peta Bulan -->
+        <!-- Tab Peta Bulan -->
         <div id="tab-heatmap" class="tab-content">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-lg font-semibold text-gray-800">Peta Bulan • Tahun Semasa</h2>
@@ -143,16 +145,15 @@
 
           <div id="heatmap-legend" class="flex items-center gap-2 text-xs text-gray-600 mb-2">
             <span>Rendah</span>
-            <div class="h-3 w-8 rounded" style="background: rgba(59,130,246,0.06);"></div>
-            <div class="h-3 w-8 rounded" style="background: rgba(59,130,246,0.14);"></div>
-            <div class="h-3 w-8 rounded" style="background: rgba(59,130,246,0.22);"></div>
-            <div class="h-3 w-8 rounded" style="background: rgba(59,130,246,0.30);"></div>
+            <div class="h-3 w-8 rounded" style="background: rgba(212,175,55,0.06);"></div>
+            <div class="h-3 w-8 rounded" style="background: rgba(212,175,55,0.14);"></div>
+            <div class="h-3 w-8 rounded" style="background: rgba(212,175,55,0.22);"></div>
+            <div class="h-3 w-8 rounded" style="background: rgba(212,175,55,0.30);"></div>
             <span>Tinggi</span>
           </div>
 
           <div id="heatmap-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
         </div>
-        <!-- [/TAMBAH] -->
       </div>
     </main>
   </div>
@@ -246,6 +247,11 @@
       else if(pass!==undefined){ Swal.fire('Gagal','Kata laluan tidak sah.','error'); }
     });
 
+    // Sticky shadow on scroll
+    const sh = document.getElementById('stickyHeader');
+    const onScroll = ()=> sh.classList.toggle('scrolled', window.scrollY > 8);
+    document.addEventListener('scroll', onScroll, { passive:true });
+
     // Tab
     function switchTab(tabName){
       document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
@@ -253,7 +259,6 @@
       document.getElementById(`tab-${tabName}`).classList.add('active');
       document.getElementById(`tab-${tabName}-btn`).classList.add('active');
       if(tabName==='list'){ loadActivities(); }
-      // [TAMBAH] render heatmap apabila tab dibuka
       if(tabName==='heatmap'){ renderHeatmapYear(); }
     }
 
@@ -263,12 +268,11 @@
     const fullDate = (d)=> new Date(d).toLocaleDateString('ms-MY', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
     const monthKey = (d)=> { const dt = new Date(d); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`; };
 
-    // Senarai + Bulan
+    // Elemen
     const activityListEl = document.getElementById('activity-list');
     const monthJumpEl = document.getElementById('month-jump');
     const listMetaEl = document.getElementById('list-meta');
     const summaryBoxesEl = document.getElementById('summary-boxes');
-    // [TAMBAH] Heatmap elements
     const heatmapGridEl = document.getElementById('heatmap-grid');
 
     let cacheData = [];
@@ -391,17 +395,15 @@
       listMetaEl.textContent = `Dipaparkan ${totalShown} aktiviti untuk ${scope}.`;
     }
 
-    // [TAMBAH] Peta Bulan: kira dan render untuk tahun semasa
+    // Heatmap emas tahun semasa
     function renderHeatmapYear(){
       if(!heatmapGridEl) return;
       const year = new Date().getFullYear();
-      // sediakan array 12 bulan
       const months = Array.from({length:12}, (_,i)=>({
         m:i+1, label: monthLabelMY.format(new Date(year, i, 1)),
         bimbingan:0, aktiviti:0, total:0
       }));
 
-      // tapis data ikut tahun semasa
       cacheData.forEach(r=>{
         if(!r.tarikh) return;
         const d = new Date(r.tarikh);
@@ -412,14 +414,12 @@
         months[idx].total++;
       });
 
-      const maxTotal = Math.max(1, ...months.map(x=>x.total)); // elak bahagi 0
+      const maxTotal = Math.max(1, ...months.map(x=>x.total));
 
-      // bina grid
       heatmapGridEl.innerHTML = months.map(x=>{
-        const intensity = x.total === 0 ? 0 : x.total / maxTotal; // 0..1
-        // gunakan biru lembut sebagai asas keamatan
-        const bg = `rgba(59,130,246,${0.06 + intensity*0.28})`; // min 0.06, max ~0.34
-        const border = x.total>0 ? 'border-blue-200' : 'border-gray-200';
+        const intensity = x.total === 0 ? 0 : x.total / maxTotal;
+        const bg = `rgba(212,175,55,${0.06 + intensity*0.28})`;
+        const border = x.total>0 ? 'border-yellow-300' : 'border-gray-200';
         return `
           <div class="rounded-xl p-3 border ${border}" style="background:${bg}">
             <div class="text-sm font-medium text-gray-800">${x.label}</div>
@@ -432,9 +432,7 @@
         `;
       }).join('');
     }
-    // [/TAMBAH]
 
-    // Muat data
     async function loadActivities(){
       const { data, error } = await supa.from('aktiviti').select('*').order('tarikh', { ascending:true });
       if(error){
@@ -445,11 +443,9 @@
       monthIndex = buildMonthIndex(cacheData);
       renderMonthOptions();
       renderActivities(monthJumpEl.value);
-      // [TAMBAH] segarkan heatmap jika tab aktif
       if(document.getElementById('tab-heatmap').classList.contains('active')) renderHeatmapYear();
     }
 
-    // Tapis/ lompat bulan
     monthJumpEl?.addEventListener('change', (e)=>{
       const val = e.target.value;
       renderActivities(val);
@@ -461,7 +457,6 @@
       }
     });
 
-    // Edit/Padam
     async function deleteActivity(id){
       if(!editEnabled){ Swal.fire('Terkunci','Buka mod edit dahulu.','info'); return; }
       const result = await Swal.fire({
@@ -544,6 +539,7 @@
     document.addEventListener('DOMContentLoaded', ()=>{
       loadActivities();
       refreshEditStateUI();
+      onScroll(); // set keadaan awal bayang
     });
   </script>
 </body>
