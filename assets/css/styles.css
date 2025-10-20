@@ -34,9 +34,11 @@ body { font-family: 'Inter', sans-serif; }
 /* Modal di atas header */
 #edit-modal{ z-index: 60; }
 
-/* Cetak */
+/* Cetakan */
+.no-print { }
 @media print{
   body { background:#fff; }
-  .tab-button, #toggle-edit-btn { display:none; }
+  .no-print{ display:none !important; }
   .sticky-header{ position: static; box-shadow:none; border:none; }
+  .tab-content{ display:block; } /* hanya seksyen aktif akan ada kandungan */
 }
