@@ -247,12 +247,10 @@
     let cacheData = [];
     let monthIndex = [];
     const SELECTED_KEY_STORAGE = 'selectedMonth_list';
-
-    // Simpan & ambil pilihan bulan untuk sesi semasa
     const getSelectedMonth = ()=> sessionStorage.getItem(SELECTED_KEY_STORAGE) || monthKey(new Date());
     const setSelectedMonth = (val)=> sessionStorage.setItem(SELECTED_KEY_STORAGE, val);
 
-    // Bina indeks bulan (tahun semasa sahaja)
+    // Indeks bulan (tahun semasa)
     function buildMonthIndex(rows){
       const map = new Map();
       rows.forEach(r=>{
@@ -266,7 +264,6 @@
       return Array.from(map.values()).sort((a,b)=> a.key.localeCompare(b.key));
     }
 
-    // Render opsyen bulan (tahun semasa)
     function renderMonthOptions(selectedKey){
       monthJumpEl.innerHTML =
         `<option value="__ALL__">Semua Bulan</option>` +
@@ -275,7 +272,6 @@
       monthJumpEl.value = keys.has(selectedKey) ? selectedKey : '__ALL__';
     }
 
-    // Ringkas bimbingan/aktiviti
     function renderSummary(totalBimbingan, totalAktiviti, filterKey){
       const scope = (filterKey==='__ALL__') ? 'Semua Bulan (Tahun Semasa)' : msMY.format(new Date(`${filterKey}-01T00:00:00`));
       summaryBoxesEl.innerHTML = `
@@ -290,11 +286,10 @@
       `;
     }
 
-    // Render senarai
     function renderActivities(filterKey='__ALL__'){
       activityListEl.innerHTML = '';
 
-      const base = cacheData.filter(a=> isCurrentYear(a.tarikh)); // hanya tahun semasa
+      const base = cacheData.filter(a=> isCurrentYear(a.tarikh));
       const filtered = base.filter(a => filterKey==='__ALL__' ? true : monthKey(a.tarikh)===filterKey);
 
       const totalBimbingan = filtered.filter(x=>x.medium_aktiviti==='Bimbingan').length;
@@ -307,7 +302,6 @@
         return;
       }
 
-      // Kelompok mengikut bulan
       const groups = new Map();
       filtered.forEach(a=>{
         const key = monthKey(a.tarikh);
@@ -377,7 +371,6 @@
       listMetaEl.textContent = `Dipaparkan ${totalShown} rekod untuk ${scope}.`;
     }
 
-    // Peta bulan (emas) tahun semasa
     function renderHeatmapYear(){
       if(!heatmapGridEl) return;
       const months = Array.from({length:12}, (_,i)=>({
@@ -396,7 +389,7 @@
       const maxTotal = Math.max(1, ...months.map(x=>x.total));
       heatmapGridEl.innerHTML = months.map(x=>{
         const intensity = x.total === 0 ? 0 : x.total / maxTotal;
-        const bg = `rgba(212,175,55,${0.06 + intensity*0.28})`; /* emas */
+        const bg = `rgba(212,175,55,${0.06 + intensity*0.28})`;
         const border = x.total>0 ? 'border-yellow-300' : 'border-gray-200';
         return `
           <div class="rounded-xl p-3 border ${border}" style="background:${bg}">
@@ -411,18 +404,12 @@
       }).join('');
     }
 
-    // Muat data
     async function loadActivities(){
       const { data, error } = await supa.from('aktiviti').select('*').order('tarikh', { ascending:true });
-      if(error){
-        Swal.fire('Ralat', error.message || 'Gagal memuatkan data aktiviti.', 'error');
-        return;
-      }
+      if(error){ Swal.fire('Ralat', error.message || 'Gagal memuatkan data aktiviti.', 'error'); return; }
       cacheData = Array.isArray(data) ? data : [];
 
-      // bina indeks untuk tahun semasa sahaja
       monthIndex = buildMonthIndex(cacheData);
-      // kekalkan pilihan bulan bagi sesi ini
       const selected = getSelectedMonth();
       renderMonthOptions(selected);
       renderActivities(selected);
@@ -430,7 +417,6 @@
       if(document.getElementById('tab-heatmap').classList.contains('active')) renderHeatmapYear();
     }
 
-    // Tukar bulan — kekalkan sepanjang sesi
     monthJumpEl?.addEventListener('change', (e)=>{
       const val = e.target.value;
       setSelectedMonth(val);
@@ -443,7 +429,7 @@
       }
     });
 
-    // Togol mod edit (klien sisi)
+    // Togol mod edit
     const EDIT_PASSWORD = 'pkgag';
     let editEnabled = sessionStorage.getItem('editEnabled') === 'true';
     const toggleBtn = document.getElementById('toggle-edit-btn');
@@ -454,13 +440,10 @@
       toggleBtn.className = 'px-3 py-2 rounded-md border text-sm font-medium ' +
         (editEnabled ? 'bg-green-50 border-green-300 text-green-800 hover:bg-green-100'
                      : 'bg-white hover:bg-gray-50');
-      // kekal pada bulan dipilih
       renderActivities(getSelectedMonth());
     }
     toggleBtn?.addEventListener('click', async ()=>{
-      if(editEnabled){
-        editEnabled=false; sessionStorage.setItem('editEnabled','false'); refreshEditStateUI(); return;
-      }
+      if(editEnabled){ editEnabled=false; sessionStorage.setItem('editEnabled','false'); refreshEditStateUI(); return; }
       const { value: pass } = await Swal.fire({
         title:'Masukkan Kata Laluan',
         input:'password',
@@ -473,7 +456,7 @@
       else if(pass!==undefined){ Swal.fire('Gagal','Kata laluan tidak sah.','error'); }
     });
 
-    // Sticky: bayang ketika skrol
+    // Sticky shadow
     const sh = document.getElementById('stickyHeader');
     const onScroll = ()=> sh.classList.toggle('scrolled', window.scrollY > 8);
     document.addEventListener('scroll', onScroll, { passive:true });
@@ -492,14 +475,10 @@
     async function deleteActivity(id){
       if(!editEnabled){ Swal.fire('Terkunci','Buka mod edit dahulu.','info'); return; }
       const result = await Swal.fire({
-        title:'Anda Pasti?',
-        text:'Aktiviti yang dipadam tidak boleh dikembalikan.',
-        icon:'warning',
-        showCancelButton:true,
-        confirmButtonColor:'#3085d6',
-        cancelButtonColor:'#d33',
-        confirmButtonText:'Ya, padam!',
-        cancelButtonText:'Batal'
+        title:'Anda Pasti?', text:'Aktiviti yang dipadam tidak boleh dikembalikan.',
+        icon:'warning', showCancelButton:true,
+        confirmButtonColor:'#3085d6', cancelButtonColor:'#d33',
+        confirmButtonText:'Ya, padam!', cancelButtonText:'Batal'
       });
       if(result.isConfirmed){
         const { error } = await supa.from('aktiviti').delete().match({ id });
@@ -522,11 +501,11 @@
       document.getElementById('edit-impak_catatan').value = activity.impak_catatan || '';
       document.getElementById('edit-tindak_susul').value = activity.tindak_susul || '';
       editModal.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';   // kunci skrol latar
+      document.body.style.overflow = 'hidden';
     }
     function closeModal(){
       editModal.classList.add('hidden');
-      document.body.style.overflow = '';         // buka semula skrol
+      document.body.style.overflow = '';
     }
     document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
     document.getElementById('save-changes-btn')?.addEventListener('click', async ()=>{
@@ -547,18 +526,16 @@
       else{
         Swal.fire('Berjaya', 'Aktiviti telah dikemas kini.', 'success');
         closeModal();
-        // kekalkan bulan dipilih selepas kemaskini
         renderActivities(getSelectedMonth());
-        loadActivities(); // segar semula cache dan ringkasan
+        loadActivities();
       }
     });
 
     document.addEventListener('DOMContentLoaded', ()=>{
-      // bila buka laman semula, paksa mula pada bulan semasa
-      setSelectedMonth(monthKey(new Date()));
+      setSelectedMonth(monthKey(new Date())); // buka laman → bulan semasa
       loadActivities();
       refreshEditStateUI();
-      onScroll(); // set bayang awal
+      onScroll();
     });
   </script>
 </body>
