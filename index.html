@@ -22,7 +22,6 @@
       <h1 class="text-3xl font-bold text-gray-800">Pelaporan Aktiviti Pegawai</h1>
       <p class="text-gray-500">REKOD dan RUMUSAN aktiviti pegawai secara maya.</p>
 
-      <!-- Panel Pemilik dengan foto -->
       <section class="mt-4 bg-white border border-gray-200 rounded-xl p-4 shadow-sm brand-owner">
         <div class="flex items-start gap-3">
           <img src="assets/img/malik.png?v=2" alt="Foto Malik Abdullah bin Adanan"
@@ -44,10 +43,14 @@
         <nav class="flex space-x-4" aria-label="Tabs">
           <button id="tab-add-btn"  class="tab-button active" onclick="switchTab('add')">Tambah Aktiviti</button>
           <button id="tab-list-btn" class="tab-button"        onclick="switchTab('list')">Senarai Aktiviti</button>
+          <!-- [TAMBAH] Tab Peta Bulan -->
+          <button id="tab-heatmap-btn" class="tab-button"     onclick="switchTab('heatmap')">Peta Bulan</button>
+          <!-- [/TAMBAH] -->
         </nav>
       </div>
 
       <div>
+        <!-- Tab Tambah -->
         <div id="tab-add" class="tab-content active">
           <div class="bg-white p-6 rounded-lg shadow-sm">
             <form id="add-activity-form" class="space-y-4">
@@ -105,8 +108,8 @@
           </div>
         </div>
 
+        <!-- Tab Senarai -->
         <div id="tab-list" class="tab-content">
-          <!-- Kawalan atas senarai + [TAMBAH] togol edit -->
           <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div>
               <label for="month-jump" class="block text-sm font-medium text-gray-700">Lompat ke Bulan</label>
@@ -130,6 +133,26 @@
             <p class="text-gray-500">Memuatkan aktiviti...</p>
           </div>
         </div>
+
+        <!-- [TAMBAH] Tab Peta Bulan -->
+        <div id="tab-heatmap" class="tab-content">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-semibold text-gray-800">Peta Bulan • Tahun Semasa</h2>
+            <div class="text-xs text-gray-500">Keamatan latar = jumlah relatif bulanan</div>
+          </div>
+
+          <div id="heatmap-legend" class="flex items-center gap-2 text-xs text-gray-600 mb-2">
+            <span>Rendah</span>
+            <div class="h-3 w-8 rounded" style="background: rgba(59,130,246,0.06);"></div>
+            <div class="h-3 w-8 rounded" style="background: rgba(59,130,246,0.14);"></div>
+            <div class="h-3 w-8 rounded" style="background: rgba(59,130,246,0.22);"></div>
+            <div class="h-3 w-8 rounded" style="background: rgba(59,130,246,0.30);"></div>
+            <span>Tinggi</span>
+          </div>
+
+          <div id="heatmap-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+        </div>
+        <!-- [/TAMBAH] -->
       </div>
     </main>
   </div>
@@ -194,25 +217,22 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtnY3N3bGhseWRydGlzaWt1cHVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MDQwNTEsImV4cCI6MjA3NjE4MDA1MX0.0qCny23q5T_qbPM2TLOpLqGCSjGrYIKLoEnjNCkhwMA';
     const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession:false } });
 
-    // [TAMBAH] Kunci mod edit
+    // Password edit toggle
     const EDIT_PASSWORD = 'pkgag';
     let editEnabled = sessionStorage.getItem('editEnabled') === 'true';
     const toggleBtn = document.getElementById('toggle-edit-btn');
     const editStateLabel = document.getElementById('edit-state-label');
     function refreshEditStateUI(){
+      if(!toggleBtn) return;
       editStateLabel.textContent = editEnabled ? 'Terbuka' : 'Terkunci';
       toggleBtn.className = 'px-3 py-2 rounded-md border text-sm font-medium ' +
         (editEnabled ? 'bg-green-50 border-green-300 text-green-800 hover:bg-green-100'
                      : 'bg-white hover:bg-gray-50');
-      // re-render senarai supaya butang edit/padam ikut keadaan semasa
       if(document.getElementById('tab-list').classList.contains('active')) renderActivities(monthJumpEl.value);
     }
-    toggleBtn.addEventListener('click', async ()=>{
+    toggleBtn?.addEventListener('click', async ()=>{
       if(editEnabled){
-        editEnabled = false;
-        sessionStorage.setItem('editEnabled','false');
-        refreshEditStateUI();
-        return;
+        editEnabled=false; sessionStorage.setItem('editEnabled','false'); refreshEditStateUI(); return;
       }
       const { value: pass } = await Swal.fire({
         title:'Masukkan Kata Laluan',
@@ -222,15 +242,9 @@
         confirmButtonText:'Sahkan',
         showCancelButton:true
       });
-      if(pass === EDIT_PASSWORD){
-        editEnabled = true;
-        sessionStorage.setItem('editEnabled','true');
-        refreshEditStateUI();
-      } else if(pass !== undefined){
-        Swal.fire('Gagal','Kata laluan tidak sah.','error');
-      }
+      if(pass===EDIT_PASSWORD){ editEnabled=true; sessionStorage.setItem('editEnabled','true'); refreshEditStateUI(); }
+      else if(pass!==undefined){ Swal.fire('Gagal','Kata laluan tidak sah.','error'); }
     });
-    // [/TAMBAH]
 
     // Tab
     function switchTab(tabName){
@@ -239,10 +253,13 @@
       document.getElementById(`tab-${tabName}`).classList.add('active');
       document.getElementById(`tab-${tabName}-btn`).classList.add('active');
       if(tabName==='list'){ loadActivities(); }
+      // [TAMBAH] render heatmap apabila tab dibuka
+      if(tabName==='heatmap'){ renderHeatmapYear(); }
     }
 
     // Util
     const msMY = new Intl.DateTimeFormat('ms-MY', { year:'numeric', month:'long' });
+    const monthLabelMY = new Intl.DateTimeFormat('ms-MY', { month:'long' });
     const fullDate = (d)=> new Date(d).toLocaleDateString('ms-MY', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
     const monthKey = (d)=> { const dt = new Date(d); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`; };
 
@@ -251,6 +268,8 @@
     const monthJumpEl = document.getElementById('month-jump');
     const listMetaEl = document.getElementById('list-meta');
     const summaryBoxesEl = document.getElementById('summary-boxes');
+    // [TAMBAH] Heatmap elements
+    const heatmapGridEl = document.getElementById('heatmap-grid');
 
     let cacheData = [];
     let monthIndex = [];
@@ -337,7 +356,6 @@
             : 'bg-green-100 text-green-800';
           const tagText = activity.medium_aktiviti || 'Lain-lain';
 
-          // [TAMBAH] butang edit/padam hanya jika editEnabled
           const actionsHTML = editEnabled ? `
             <div class="flex items-center space-x-2">
               <button onclick='openEditModal(${JSON.stringify(activity)})' class="text-blue-500 hover:text-blue-700 p-1" title="Edit" aria-label="Edit">
@@ -373,7 +391,50 @@
       listMetaEl.textContent = `Dipaparkan ${totalShown} aktiviti untuk ${scope}.`;
     }
 
-    // Muatkan data
+    // [TAMBAH] Peta Bulan: kira dan render untuk tahun semasa
+    function renderHeatmapYear(){
+      if(!heatmapGridEl) return;
+      const year = new Date().getFullYear();
+      // sediakan array 12 bulan
+      const months = Array.from({length:12}, (_,i)=>({
+        m:i+1, label: monthLabelMY.format(new Date(year, i, 1)),
+        bimbingan:0, aktiviti:0, total:0
+      }));
+
+      // tapis data ikut tahun semasa
+      cacheData.forEach(r=>{
+        if(!r.tarikh) return;
+        const d = new Date(r.tarikh);
+        if(d.getFullYear() !== year) return;
+        const idx = d.getMonth();
+        if(r.medium_aktiviti === 'Bimbingan') months[idx].bimbingan++;
+        else if(r.medium_aktiviti === 'Aktiviti') months[idx].aktiviti++;
+        months[idx].total++;
+      });
+
+      const maxTotal = Math.max(1, ...months.map(x=>x.total)); // elak bahagi 0
+
+      // bina grid
+      heatmapGridEl.innerHTML = months.map(x=>{
+        const intensity = x.total === 0 ? 0 : x.total / maxTotal; // 0..1
+        // gunakan biru lembut sebagai asas keamatan
+        const bg = `rgba(59,130,246,${0.06 + intensity*0.28})`; // min 0.06, max ~0.34
+        const border = x.total>0 ? 'border-blue-200' : 'border-gray-200';
+        return `
+          <div class="rounded-xl p-3 border ${border}" style="background:${bg}">
+            <div class="text-sm font-medium text-gray-800">${x.label}</div>
+            <div class="mt-2 flex items-center gap-2">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">Bimbingan: ${x.bimbingan}</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">Aktiviti: ${x.aktiviti}</span>
+            </div>
+            <div class="mt-1 text-xs text-gray-600">Jumlah: ${x.total}</div>
+          </div>
+        `;
+      }).join('');
+    }
+    // [/TAMBAH]
+
+    // Muat data
     async function loadActivities(){
       const { data, error } = await supa.from('aktiviti').select('*').order('tarikh', { ascending:true });
       if(error){
@@ -384,6 +445,8 @@
       monthIndex = buildMonthIndex(cacheData);
       renderMonthOptions();
       renderActivities(monthJumpEl.value);
+      // [TAMBAH] segarkan heatmap jika tab aktif
+      if(document.getElementById('tab-heatmap').classList.contains('active')) renderHeatmapYear();
     }
 
     // Tapis/ lompat bulan
@@ -398,7 +461,7 @@
       }
     });
 
-    // Edit/Padam dipagar oleh editEnabled juga
+    // Edit/Padam
     async function deleteActivity(id){
       if(!editEnabled){ Swal.fire('Terkunci','Buka mod edit dahulu.','info'); return; }
       const result = await Swal.fire({
@@ -455,8 +518,8 @@
       editModal.classList.remove('hidden');
     }
     function closeModal(){ editModal.classList.add('hidden'); }
-    document.getElementById('close-modal-btn').addEventListener('click', closeModal);
-    document.getElementById('save-changes-btn').addEventListener('click', async ()=>{
+    document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
+    document.getElementById('save-changes-btn')?.addEventListener('click', async ()=>{
       if(!editEnabled){ Swal.fire('Terkunci','Buka mod edit dahulu.','info'); return; }
       const id = document.getElementById('edit-activity-id').value;
       const updated = {
@@ -480,7 +543,7 @@
 
     document.addEventListener('DOMContentLoaded', ()=>{
       loadActivities();
-      refreshEditStateUI(); // [TAMBAH] papar status mod edit semasa
+      refreshEditStateUI();
     });
   </script>
 </body>
