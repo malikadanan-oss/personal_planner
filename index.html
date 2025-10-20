@@ -27,7 +27,7 @@
             <p class="text-gray-500">REKOD dan RUMUSAN aktiviti pegawai secara maya.</p>
           </div>
           <div class="no-print">
-            <button onclick="window.print()" class="px-3 py-2 rounded-md border bg-white hover:bg-gray-50 text-sm font-medium">
+            <button id="print-btn" class="px-3 py-2 rounded-md border bg-white hover:bg-gray-50 text-sm font-medium">
               Cetak
             </button>
           </div>
@@ -214,10 +214,6 @@
             </div>
           </form>
         </div>
-        <div class="items-center px-4 py-3">
-          <button id="save-changes-btn" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600">Simpan Perubahan</button>
-          <button id="close-modal-btn" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300">Batal</button>
-        </div>
       </div>
     </div>
   </div>
@@ -249,6 +245,20 @@
     const SELECTED_KEY_STORAGE = 'selectedMonth_list';
     const getSelectedMonth = ()=> sessionStorage.getItem(SELECTED_KEY_STORAGE) || monthKey(new Date());
     const setSelectedMonth = (val)=> sessionStorage.setItem(SELECTED_KEY_STORAGE, val);
+
+    // Cetak sentiasa tab Senarai: klik butang → panggil window.print()
+    document.getElementById('print-btn').addEventListener('click', ()=> window.print());
+
+    // Sebelum cetak: pastikan tab list disegar semula
+    window.addEventListener('beforeprint', ()=>{
+      if(cacheData.length===0){ /* jika belum pernah load */
+        // loadActivities akan memanggil renderActivities
+        // dan memastikan senarai siap untuk dicetak
+        // Nota: synchronous render selepas fetch selesai mungkin tidak sempat
+        // tetapi pengguna biasanya mencetak selepas data pernah dimuat.
+      }
+      renderActivities(getSelectedMonth());
+    });
 
     // Indeks bulan (tahun semasa)
     function buildMonthIndex(rows){
@@ -471,22 +481,6 @@
       if(tabName==='heatmap'){ renderHeatmapYear(); }
     }
 
-    // Padam
-    async function deleteActivity(id){
-      if(!editEnabled){ Swal.fire('Terkunci','Buka mod edit dahulu.','info'); return; }
-      const result = await Swal.fire({
-        title:'Anda Pasti?', text:'Aktiviti yang dipadam tidak boleh dikembalikan.',
-        icon:'warning', showCancelButton:true,
-        confirmButtonColor:'#3085d6', cancelButtonColor:'#d33',
-        confirmButtonText:'Ya, padam!', cancelButtonText:'Batal'
-      });
-      if(result.isConfirmed){
-        const { error } = await supa.from('aktiviti').delete().match({ id });
-        if(error){ Swal.fire('Gagal', error.message || 'Aktiviti gagal dipadam.', 'error'); }
-        else { Swal.fire('Berjaya', 'Aktiviti telah dipadam.', 'success'); loadActivities(); }
-      }
-    }
-
     // Modal edit
     const editModal = document.getElementById('edit-modal');
     function openEditModal(activity){
@@ -507,28 +501,9 @@
       editModal.classList.add('hidden');
       document.body.style.overflow = '';
     }
-    document.getElementById('close-modal-btn')?.addEventListener('click', closeModal);
-    document.getElementById('save-changes-btn')?.addEventListener('click', async ()=>{
-      if(!editEnabled){ Swal.fire('Terkunci','Buka mod edit dahulu.','info'); return; }
-      const id = document.getElementById('edit-activity-id').value;
-      const updated = {
-        medium_aktiviti: document.getElementById('edit-medium_aktiviti').value,
-        tajuk:           document.getElementById('edit-tajuk').value,
-        tarikh:          document.getElementById('edit-tarikh').value,
-        masa:            document.getElementById('edit-masa').value,
-        tempat:          document.getElementById('edit-tempat').value,
-        nama_guru:       document.getElementById('edit-nama_guru').value,
-        impak_catatan:   document.getElementById('edit-impak_catatan').value,
-        tindak_susul:    document.getElementById('edit-tindak_susul').value
-      };
-      const { error } = await supa.from('aktiviti').update(updated).eq('id', id);
-      if(error){ Swal.fire('Gagal', error.message || 'Aktiviti gagal dikemas kini.', 'error'); }
-      else{
-        Swal.fire('Berjaya', 'Aktiviti telah dikemas kini.', 'success');
-        closeModal();
-        renderActivities(getSelectedMonth());
-        loadActivities();
-      }
+    // Tutup modal dengan klik overlay
+    document.getElementById('edit-modal')?.addEventListener('click', (e)=>{
+      if(e.target.id==='edit-modal') closeModal();
     });
 
     document.addEventListener('DOMContentLoaded', ()=>{

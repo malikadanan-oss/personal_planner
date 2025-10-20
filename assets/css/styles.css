@@ -34,13 +34,14 @@ body { font-family: 'Inter', sans-serif; }
 /* Modal di atas header */
 #edit-modal{ z-index: 60; }
 
-/* Cetakan */
+/* Cetakan — sentiasa cetak tab Senarai Aktiviti sahaja */
 .no-print { }
 @media print{
   body { background:#fff; }
   .no-print{ display:none !important; }
   .sticky-header{ position: static; box-shadow:none; border:none; }
-  /* HANYA tab aktif dicetak */
-  .tab-content{ display:none !important; }
-  .tab-content.active{ display:block !important; }
+
+  /* Paksa hanya #tab-list dipaparkan ketika cetak */
+  #tab-add, #tab-heatmap{ display:none !important; }
+  #tab-list{ display:block !important; }
 }
