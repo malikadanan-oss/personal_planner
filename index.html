@@ -343,7 +343,7 @@
           const card = document.createElement('div');
           card.className = 'bg-white p-4 rounded-lg shadow-sm border border-gray-200';
 
-          const tagColor = activity.medium_aktiviti === 'Bimbingan'
+        const tagColor = activity.medium_aktiviti === 'Bimbingan'
             ? 'bg-sky-100 text-sky-800'
             : 'bg-green-100 text-green-800';
           const tagText = activity.medium_aktiviti || 'Lain-lain';
@@ -506,10 +506,35 @@
         Swal.fire('Gagal', error.message || 'Aktiviti gagal dipadam.', 'error');
       }else{
         Swal.fire('Berjaya', 'Aktiviti telah dipadam.', 'success');
-        loadActivities(); // segar semula senarai tanpa ubah bulan dipilih
+        loadActivities();
       }
     }
     // ===== TAMAT: Fungsi PADAM =====
+
+    // ===== DIPULIHKAN: Simpan Aktiviti baharu =====
+    const addForm = document.getElementById('add-activity-form');
+    addForm?.addEventListener('submit', async (event)=>{
+      event.preventDefault();
+      const payload = {
+        medium_aktiviti: document.getElementById('medium_aktiviti').value,
+        tajuk:           document.getElementById('tajuk').value,
+        tarikh:          document.getElementById('tarikh').value,
+        masa:            document.getElementById('masa').value,
+        tempat:          document.getElementById('tempat').value,
+        nama_guru:       document.getElementById('nama_guru').value,
+        impak_catatan:   document.getElementById('impak_catatan').value,
+        tindak_susul:    document.getElementById('tindak_susul').value
+      };
+      const { error } = await supa.from('aktiviti').insert([ payload ]);
+      if(error){
+        Swal.fire('Gagal', error.message || 'Sila pastikan semua medan diisi dengan betul.', 'error');
+      }else{
+        Swal.fire('Berjaya', 'Aktiviti baharu telah ditambah.', 'success');
+        addForm.reset();
+        loadActivities();
+      }
+    });
+    // ===== TAMAT: Simpan Aktiviti baharu =====
 
     // Modal edit
     const editModal = document.getElementById('edit-modal');
