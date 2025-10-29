@@ -236,6 +236,27 @@
     const monthKey = (d)=> { const dt = new Date(d); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`; };
     const isCurrentYear = (d)=> new Date(d).getFullYear() === currentYear;
 
+    // ===== BARU: Fungsi untuk menukar teks URL kepada pautan =====
+    /**
+     * Menukar URL dalam teks menjadi pautan HTML yang boleh diklik.
+     * @param {string | null | undefined} text Teks input
+     * @returns {string} Teks dengan HTML pautan
+     */
+    function linkifyText(text) {
+      if (!text || text.trim() === '') {
+        return '-'; // Kembalikan 'default' jika tiada input
+      }
+      // Regex untuk mencari URL http, https
+      const urlRegex = /(https?:\/\/[^\s<]+)/g;
+      
+      // Ganti URL dengan tag <a>
+      // 'word-break: break-all' ditambah untuk pastikan pautan panjang tidak 'overflow'
+      return text.replace(urlRegex, (url) => {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline" style="word-break: break-all;">${url}</a>`;
+      });
+    }
+    // ===== TAMAT FUNGSI BARU =====
+
     // Elemen
     const activityListEl = document.getElementById('activity-list');
     const monthJumpEl = document.getElementById('month-jump');
@@ -350,6 +371,7 @@
               </button>
             </div>` : ``;
 
+          // ===== DIUBAH SUAI: Menggunakan linkifyText() =====
           card.innerHTML = `
             <div class="flex justify-between items-start">
               <div>
@@ -359,12 +381,14 @@
                 <p class="text-sm text-gray-500">${activity.masa || 'Tempoh masa tidak dinyatakan'}</p>
                 <p class="mt-2 text-gray-700">${activity.tempat || 'Tempat tidak dinyatakan'}</p>
                 <p class="text-sm text-gray-700"><span class="font-medium">Nama Guru:</span> ${activity.nama_guru || '-'}</p>
-                <p class="text-sm text-gray-700"><span class="font-medium">Impak/Catatan:</span> ${activity.impak_catatan || '-'}</p>
-                <p class="text-sm text-gray-700"><span class="font-medium">Tindak Susul:</span> ${activity.tindak_susul || '-'}</p>
+                <p class="text-sm text-gray-700" style="overflow-wrap: break-word;"><span class="font-medium">Impak/Catatan:</span> ${linkifyText(activity.impak_catatan)}</p>
+                <p class="text-sm text-gray-700" style="overflow-wrap: break-word;"><span class="font-medium">Tindak Susul:</span> ${linkifyText(activity.tindak_susul)}</p>
               </div>
               ${actionsHTML}
             </div>
           `;
+          // ===== TAMAT UBAH SUAI =====
+
           section.appendChild(card);
         });
 
